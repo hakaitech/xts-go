@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"maps"
 	"net/http"
 	"net/url"
 
@@ -16,7 +15,10 @@ import (
 	COMMON STRUCTS AND METHODS
 */
 
-var XTS_baseURL string
+var (
+	XTS_baseURL    string
+	ErrOrderFailed error = fmt.Errorf("order failed")
+)
 
 type XTSClient struct {
 	secretKey        string
@@ -28,47 +30,59 @@ type XTSClient struct {
 }
 
 type XTSOrder struct {
-	ClientID             string
-	OrderUID             string
-	ExchangeSegment      string
-	ProductType          string
-	OrderType            string
-	OrderSide            string
-	TimeInForce          string
-	AppOrderID           float64
-	LimitPrice           float64
-	StopPRice            float64
-	DisclosedQuantity    int64
-	OrderQuantity        int64
-	ExchangeInstrumentID int64
+	ClientID             string  `json:"clientID,omitempty"`
+	OrderUID             string  `json:"orderUID,omitempty"`
+	ExchangeSegment      string  `json:"exchangeSegment,omitempty"`
+	ProductType          string  `json:"productType,omitempty"`
+	OrderType            string  `json:"orderType,omitempty"`
+	OrderSide            string  `json:"orderSide,omitempty"`
+	TimeInForce          string  `json:"timeInForce,omitempty"`
+	AppOrderID           float64 `json:"appOrderID,omitempty"`
+	LimitPrice           float64 `json:"limitPrice,omitempty"`
+	StopPrice            float64 `json:"stopPrice,omitempty"`
+	DisclosedQuantity    int64   `json:"disclosedQuantity,omitempty"`
+	OrderQuantity        int64   `json:"orderQuantity,omitempty"`
+	ExchangeInstrumentID int64   `json:"exchangeInstrumentID,omitempty"`
 }
 
 type ResponseObject[T any] struct {
-	Type   string
-	Result T
+	Type   string `json:"type,omitempty"`
+	Result T      `json:"result,omitempty"`
 }
 
 type UserProfile struct {
-	ClientName         string
-	EmailID            string
-	MobileNo           string
-	PAN                string
-	ResidentialAddress string
+	ClientName         string `json:"clientName,omitempty"`
+	EmailID            string `json:"emailID,omitempty"`
+	MobileNo           string `json:"mobileNo,omitempty"`
+	PAN                string `json:"pan,omitempty"`
+	ResidentialAddress string `json:"residentialAddress,omitempty"`
 	ClientBankInfoList struct {
-		AccountNumber   string
-		AccountType     string
-		BankName        string
-		BankBranchName  string
-		BankCity        string
-		CustomerId      string
-		BankCityPincode string
-		BankIFSCCode    string
-	}
+		AccountNumber   string `json:"accountNumber,omitempty"`
+		AccountType     string `json:"accountType,omitempty"`
+		BankName        string `json:"bankName,omitempty"`
+		BankBranchName  string `json:"bankBranchName,omitempty"`
+		BankCity        string `json:"bankCity,omitempty"`
+		CustomerId      string `json:"customerId,omitempty"`
+		BankCityPincode string `json:"bankCityPincode,omitempty"`
+		BankIFSCCode    string `json:"bankIFSCCode,omitempty"`
+	} `json:"clientBankInfoList,omitempty"`
 	ClientExchangeDetailsList []struct {
-		ParticipantCode   string
-		ExchangeSegNumber int64
-		Enabled           bool
+		ParticipantCode   string `json:"participantCode,omitempty"`
+		ExchangeSegNumber int64  `json:"exchangeSegNumber,omitempty"`
+		Enabled           bool   `json:"enabled,omitempty"`
+	} `json:"clientExchangeDetailsList,omitempty"`
+}
+
+func AsMap[T any](in T) (map[string]any, error) {
+	inrec, err := json.Marshal(in)
+	if err != nil {
+		return nil, err
 	}
+	var res map[string]any
+	if err := json.Unmarshal(inrec, &res); err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 func decodeResponseBody[T any](resp *http.Response) (T, error) {
@@ -91,7 +105,7 @@ func newRequestWithBodyAndContext(ctx context.Context, callUrl, method string, r
 		return nil, err
 	}
 	client := &http.Client{}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, reqUrl, bytes.NewBuffer(body))
+	req, err := http.NewRequestWithContext(ctx, method, reqUrl, bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +120,7 @@ func newRequestWithBodyAndContextWithAuth(ctx context.Context, callUrl, method, 
 		return nil, err
 	}
 	client := &http.Client{}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, reqUrl, bytes.NewBuffer(body))
+	req, err := http.NewRequestWithContext(ctx, method, reqUrl, bytes.NewBuffer(body))
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +172,7 @@ func (x *XTSClient) NewOrder(ctx context.Context, exch string, instID int64, pro
 			DisclosedQuantity:    disclosedQuantity,
 			OrderQuantity:        orderQty,
 			LimitPrice:           limitPrice,
-			StopPRice:            stopPrice,
+			StopPrice:            stopPrice,
 		}, nil
 
 	} else {
@@ -173,7 +187,7 @@ func (x *XTSClient) NewOrder(ctx context.Context, exch string, instID int64, pro
 			DisclosedQuantity:    disclosedQuantity,
 			OrderQuantity:        orderQty,
 			LimitPrice:           limitPrice,
-			StopPRice:            stopPrice,
+			StopPrice:            stopPrice,
 		}, nil
 	}
 }
@@ -192,9 +206,9 @@ func (x *XTSClient) SessionLogin(ctx context.Context) error {
 		return err
 	}
 	type responseBody struct {
-		Token            string `json:"token"`
-		UserID           string `json:"userID"`
-		IsInvestorClient bool   `json:"isInvestorClient"`
+		Token            string `json:"token,omitempty"`
+		UserID           string `json:"userID,omitempty"`
+		IsInvestorClient bool   `json:"isInvestorClient,omitempty"`
 	}
 	resStruct, err := decodeResponseBody[ResponseObject[responseBody]](res)
 	if err != nil {
@@ -280,10 +294,10 @@ func (x *XTSClient) PlaceOrder(ctx context.Context, order *XTSOrder) (float64, e
 		return -1, err
 	}
 	if res.StatusCode != 200 {
-		return -1, fmt.Errorf("API responded with status code other than 200: %s", res.Status)
+		return -1, ErrOrderFailed
 	}
 	type respsonseBody struct {
-		AppOrderID float64
+		AppOrderID float64 `json:"appOrderID,omitempty"`
 	}
 	resStruct, err := decodeResponseBody[ResponseObject[respsonseBody]](res)
 	if err != nil {
@@ -305,50 +319,88 @@ type ModificationParams struct {
 	ModifiedDisclosedQuantity int64   `json:"modifiedDisclosedQuantity,omitempty"`
 }
 
-func (params *ModificationParams) AsMap() (map[string]any, error) {
-	bdy, err := json.Marshal(params)
-	if err != nil {
-		return nil, err
-	}
-	var res map[string]any
-	if err := json.Unmarshal(bdy, &res); err != nil {
-		return nil, err
-	}
-	return res, nil
-}
-
-func (x *XTSClient) ModifyOpenOrder(ctx context.Context, appOrderID float64, originalOrder *XTSOrder, modified *ModificationParams) (float64, error) {
+func (x *XTSClient) ModifyOpenOrder(ctx context.Context, originalOrder *XTSOrder, modified *ModificationParams) (*XTSOrder, error) {
 	res, err := newRequestWithBodyAndContextWithAuth(ctx, "insteractive/orders", http.MethodPut, x.sessionToken, modified)
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
 	type responseBody struct {
-		AppOrderID float64
+		AppOrderID float64 `json:"appOrderID,omitempty"`
 	}
 	if res.StatusCode != 200 {
-		return -1, fmt.Errorf("API responded with status code other than 200: %s", res.Status)
+		return nil, ErrOrderFailed
 	}
 	resStruct, err := decodeResponseBody[ResponseObject[responseBody]](res)
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
 	newAppOrderID := resStruct.Result.AppOrderID
-	originalOrder.AppOrderID = newAppOrderID
-	newOrder := &XTSOrder{
-		ClientID:             "",
-		OrderUID:             "",
-		ExchangeSegment:      "",
-		ProductType:          "",
-		OrderType:            "",
-		OrderSide:            "",
-		TimeInForce:          "",
-		AppOrderID:           appOrderID,
-		LimitPrice:           0,
-		StopPRice:            0,
-		DisclosedQuantity:    0,
-		OrderQuantity:        0,
-		ExchangeInstrumentID: 0,
+	newOrder := originalOrder
+	newOrder.AppOrderID = newAppOrderID
+	modMap, err := AsMap(modified)
+	for field, Value := range modMap {
+		switch field {
+		case "modifiedProductType":
+			newOrder.ProductType = Value.(string)
+		case "modifiedOrderType":
+			newOrder.OrderType = Value.(string)
+		case "modifiedTimeInForce":
+			newOrder.TimeInForce = Value.(string)
+		case "modifiedOrderUID":
+			newOrder.OrderUID = Value.(string)
+		case "modifiedLimitPrice":
+			newOrder.LimitPrice = Value.(float64)
+		case "modifiedStopPrice":
+			newOrder.StopPrice = Value.(float64)
+		case "modifiedOrderQuantity":
+			newOrder.OrderQuantity = int64(Value.(float64))
+		case "modifiedDisclosedQuantity":
+			newOrder.DisclosedQuantity = int64(Value.(float64))
+		default:
+			return nil, fmt.Errorf("invalid field modifier")
+		}
 	}
-	originalOrder = newOrder
-	return newAppOrderID, nil
+	return newOrder, nil
+}
+
+func (x *XTSClient) CancelOpenOrder(ctx context.Context, order *XTSOrder) error {
+	req, err := http.NewRequest(http.MethodDelete, "/interactive/orders", nil)
+	if err != nil {
+		return err
+	}
+	q := req.URL.Query()
+	q.Add("appOrderID", fmt.Sprintf("%d", int64(order.AppOrderID)))
+	if !x.isInvestorClient {
+		q.Add("ClientID", x.ClientID)
+	}
+	req.URL.RawQuery = q.Encode()
+	addAuthHeaders(req, x.sessionToken)
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	if res.StatusCode != 200 {
+		return ErrOrderFailed
+	}
+	return nil
+}
+
+func (x *XTSClient) CancelAllOrders(ctx context.Context, xSeg string, xInstID int64) error {
+	body := map[string]any{
+		"exchangeSegment":      xSeg,
+		"exchangeInstrumentID": xInstID,
+	}
+	res, err := newRequestWithBodyAndContextWithAuth(ctx, "/interactive/orders/cancelall", http.MethodPost, x.sessionToken, body)
+	if err != nil {
+		return err
+	}
+	if res.StatusCode != 200 {
+		return ErrOrderFailed
+	}
+	return nil
+}
+
+func (x *XTSClient) PlaceBracketOrder(ctx context.Context) error {
+	return nil
 }
