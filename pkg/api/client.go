@@ -13,8 +13,6 @@ import (
 
 	"github.com/hakaitech/xts-go/pkg/config"
 	"github.com/hakaitech/xts-go/pkg/types"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // Client handles HTTP API requests
@@ -54,7 +52,7 @@ func (c *Client) SetBaseURL(baseURL string) {
 // DoRequest performs an HTTP request with proper error handling and retries
 func (c *Client) DoRequest(ctx context.Context, method, endpoint string, body interface{}, headers map[string]string) (*http.Response, error) {
 	var lastErr error
-	
+
 	for attempt := 0; attempt <= c.config.RetryAttempts; attempt++ {
 		if attempt > 0 {
 			// Wait before retry
@@ -64,24 +62,20 @@ func (c *Client) DoRequest(ctx context.Context, method, endpoint string, body in
 			case <-time.After(time.Duration(attempt) * time.Second):
 			}
 		}
-		
+
 		resp, err := c.doSingleRequest(ctx, method, endpoint, body, headers)
 		if err == nil {
 			return resp, nil
 		}
-		
+
 		lastErr = err
-		
+
 		// Don't retry for certain types of errors
 		if !c.shouldRetry(err) {
 			break
 		}
-		
-		if c.config.Debug {
-			log.Warnf("Request attempt %d failed: %v", attempt+1, err)
-		}
 	}
-	
+
 	return nil, fmt.Errorf("request failed after %d attempts: %w", c.config.RetryAttempts+1, lastErr)
 }
 
@@ -113,10 +107,6 @@ func (c *Client) doSingleRequest(ctx context.Context, method, endpoint string, b
 	// Set custom headers
 	for key, value := range headers {
 		req.Header.Set(key, value)
-	}
-
-	if c.config.Debug {
-		log.Debugf("Making %s request to %s", method, reqURL)
 	}
 
 	resp, err := c.httpClient.Do(req)
@@ -214,10 +204,6 @@ func (c *Client) GetWithQuery(ctx context.Context, endpoint string, params map[s
 		req.Header.Set(key, value)
 	}
 
-	if c.config.Debug {
-		log.Debugf("Making GET request to %s", u.String())
-	}
-
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("HTTP request failed: %w", err)
@@ -248,7 +234,7 @@ func (c *Client) shouldRetry(err error) bool {
 			return true
 		}
 	}
-	
+
 	// Retry for network errors
 	return true
 }

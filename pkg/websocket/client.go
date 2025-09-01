@@ -12,7 +12,6 @@ import (
 	"github.com/hakaitech/xts-go/pkg/config"
 	"github.com/hakaitech/xts-go/pkg/types"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/gorilla/websocket"
 )
 
@@ -32,15 +31,15 @@ type EventHandler interface {
 // DefaultEventHandler provides a default implementation of EventHandler
 type DefaultEventHandler struct{}
 
-func (h *DefaultEventHandler) OnConnect()                              {}
-func (h *DefaultEventHandler) OnDisconnect()                           {}
-func (h *DefaultEventHandler) OnError(err error)                       {}
-func (h *DefaultEventHandler) OnMessage(data []byte)                   {}
+func (h *DefaultEventHandler) OnConnect()                                {}
+func (h *DefaultEventHandler) OnDisconnect()                             {}
+func (h *DefaultEventHandler) OnError(err error)                         {}
+func (h *DefaultEventHandler) OnMessage(data []byte)                     {}
 func (h *DefaultEventHandler) OnTouchlineData(data *types.TouchlineData) {}
-func (h *DefaultEventHandler) OnMarketDepthData(data interface{})      {}
-func (h *DefaultEventHandler) OnIndexData(data interface{})            {}
-func (h *DefaultEventHandler) OnCandleData(data interface{})           {}
-func (h *DefaultEventHandler) OnOpenInterestData(data interface{})     {}
+func (h *DefaultEventHandler) OnMarketDepthData(data interface{})        {}
+func (h *DefaultEventHandler) OnIndexData(data interface{})              {}
+func (h *DefaultEventHandler) OnCandleData(data interface{})             {}
+func (h *DefaultEventHandler) OnOpenInterestData(data interface{})       {}
 
 // WebSocketMessage represents a message received from WebSocket
 type WebSocketMessage struct {
@@ -117,10 +116,6 @@ func (c *Client) Connect(ctx context.Context, wsURL, token string) error {
 
 	c.handler.OnConnect()
 
-	if c.config.Debug {
-		log.Debugf("WebSocket connected to %s", wsURL)
-	}
-
 	return nil
 }
 
@@ -134,7 +129,7 @@ func (c *Client) Disconnect() error {
 	}
 
 	c.reconnect = false
-	
+
 	if c.cancel != nil {
 		c.cancel()
 	}
@@ -208,10 +203,6 @@ func (c *Client) sendMessage(message interface{}) error {
 		return fmt.Errorf("failed to marshal message: %w", err)
 	}
 
-	if c.config.Debug {
-		log.Debugf("Sending WebSocket message: %s", string(data))
-	}
-
 	return conn.WriteMessage(websocket.TextMessage, data)
 }
 
@@ -222,7 +213,7 @@ func (c *Client) readLoop() {
 		c.isConnected = false
 		c.mu.Unlock()
 		c.handler.OnDisconnect()
-		
+
 		// Attempt reconnection if enabled
 		if c.reconnect {
 			go c.attemptReconnect()
@@ -240,10 +231,6 @@ func (c *Client) readLoop() {
 					c.handler.OnError(fmt.Errorf("WebSocket read error: %w", err))
 				}
 				return
-			}
-
-			if c.config.Debug {
-				log.Debugf("Received WebSocket message: %s", string(message))
 			}
 
 			c.handler.OnMessage(message)
@@ -300,9 +287,7 @@ func (c *Client) handleMessage(message []byte) {
 	case types.MessageCodeOpenInterest:
 		c.handler.OnOpenInterestData(wsMsg.Data)
 	default:
-		if c.config.Debug {
-			log.Debugf("Unhandled message code: %d", wsMsg.MessageCode)
-		}
+		// Unhandled message code - silently ignore
 	}
 }
 
@@ -374,9 +359,7 @@ func (c *Client) attemptReconnect() {
 
 		time.Sleep(time.Duration(attempt) * time.Second)
 
-		if c.config.Debug {
-			log.Debugf("Attempting WebSocket reconnection (attempt %d/%d)", attempt, maxRetries)
-		}
+		fmt.Printf("Attempting WebSocket reconnection (attempt %d/%d)\n", attempt, maxRetries)
 
 		// Create new context for reconnection
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
@@ -384,9 +367,7 @@ func (c *Client) attemptReconnect() {
 		cancel()
 
 		if err == nil {
-			if c.config.Debug {
-				log.Debug("WebSocket reconnection successful")
-			}
+			fmt.Println("WebSocket reconnection successful")
 			return
 		}
 
