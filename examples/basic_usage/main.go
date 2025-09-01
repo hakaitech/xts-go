@@ -6,9 +6,9 @@ import (
 	"log"
 	"os"
 
-	"xts-go/pkg/client"
-	"xts-go/pkg/config"
-	"xts-go/pkg/types"
+	"github.com/hakaitech/xts-go/pkg/client"
+	"github.com/hakaitech/xts-go/pkg/config"
+	"github.com/hakaitech/xts-go/pkg/types"
 )
 
 // SimpleExample demonstrates basic usage of the XTS Go wrapper

@@ -1,4 +1,4 @@
-module xts-go
+module github.com/hakaitech/xts-go
 
 go 1.23.0
 

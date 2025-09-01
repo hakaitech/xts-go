@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"xts-go/pkg/config"
-	"xts-go/pkg/marketdata"
-	"xts-go/pkg/trading"
-	"xts-go/pkg/types"
+	"github.com/hakaitech/xts-go/pkg/config"
+	"github.com/hakaitech/xts-go/pkg/interfaces"
+	"github.com/hakaitech/xts-go/pkg/marketdata"
+	"github.com/hakaitech/xts-go/pkg/trading"
+	"github.com/hakaitech/xts-go/pkg/types"
 )
 
 // XTSClient is the main client that provides access to both trading and market data APIs
@@ -16,6 +17,9 @@ type XTSClient struct {
 	Trading    *trading.Client
 	MarketData *marketdata.Client
 }
+
+// Ensure XTSClient implements the XTSClient interface
+var _ interfaces.XTSClient = (*XTSClient)(nil)
 
 // NewXTSClient creates a new XTS client with the provided configuration
 func NewXTSClient(cfg *config.Config) (*XTSClient, error) {
@@ -275,4 +279,14 @@ func (c *XTSClient) SetEnvironment(env string) {
 // SetDebug enables or disables debug logging
 func (c *XTSClient) SetDebug(enable bool) {
 	c.config.Debug = enable
+}
+
+// GetTradingAPI returns the trading API interface
+func (c *XTSClient) GetTradingAPI() interfaces.TradingAPI {
+	return c.Trading
+}
+
+// GetMarketDataAPI returns the market data API interface
+func (c *XTSClient) GetMarketDataAPI() interfaces.MarketDataAPI {
+	return c.MarketData
 }

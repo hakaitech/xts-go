@@ -10,10 +10,10 @@ import (
 	"syscall"
 	"time"
 
-	"xts-go/pkg/client"
-	"xts-go/pkg/config"
-	"xts-go/pkg/types"
-	"xts-go/pkg/websocket"
+	"github.com/hakaitech/xts-go/pkg/client"
+	"github.com/hakaitech/xts-go/pkg/config"
+	"github.com/hakaitech/xts-go/pkg/types"
+	"github.com/hakaitech/xts-go/pkg/websocket"
 )
 
 // CustomEventHandler implements the WebSocket event handler interface

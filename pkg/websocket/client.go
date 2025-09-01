@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
-	"xts-go/pkg/config"
-	"xts-go/pkg/types"
+	"github.com/hakaitech/xts-go/pkg/config"
+	"github.com/hakaitech/xts-go/pkg/types"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/gorilla/websocket"

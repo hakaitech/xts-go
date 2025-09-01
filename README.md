@@ -17,6 +17,9 @@ A comprehensive, modular Go wrapper for the XTS Trading APIs by Symphony FinTech
 - **Host Lookup**: Support for XTS host lookup functionality
 - **Environment Support**: Easy switching between development, sandbox, and production environments
 - **Debug Support**: Built-in logging and debugging capabilities
+- **Library Ready**: Designed to be used as a library for building trading applications and tools
+- **Extensible**: Clean interfaces and abstractions for easy extension and customization
+- **Testing Support**: Comprehensive test suite and examples for library usage
 
 ## Installation
 
@@ -36,9 +39,9 @@ import (
     "fmt"
     "log"
 
-    "xts-go/pkg/client"
-    "xts-go/pkg/config"
-    "xts-go/pkg/types"
+    "github.com/hakaitech/xts-go/pkg/client"
+    "github.com/hakaitech/xts-go/pkg/config"
+    "github.com/hakaitech/xts-go/pkg/types"
 )
 
 func main() {
@@ -83,8 +86,8 @@ func main() {
 
 ```go
 import (
-    "xts-go/pkg/config"
-    "xts-go/pkg/trading"
+    "github.com/hakaitech/xts-go/pkg/config"
+    "github.com/hakaitech/xts-go/pkg/trading"
 )
 
 cfg := config.NewConfig("secret", "appkey", "clientid")
@@ -114,9 +117,9 @@ orderID, err := tradingClient.PlaceOrder(ctx, order)
 
 ```go
 import (
-    "xts-go/pkg/config"
-    "xts-go/pkg/marketdata"
-    "xts-go/pkg/types"
+    "github.com/hakaitech/xts-go/pkg/config"
+    "github.com/hakaitech/xts-go/pkg/marketdata"
+    "github.com/hakaitech/xts-go/pkg/types"
 )
 
 cfg := config.NewConfig("secret", "appkey", "clientid")
@@ -139,7 +142,7 @@ quotes, err := marketClient.GetQuote(ctx, instruments, types.MessageCodeTouchlin
 
 ```go
 import (
-    "xts-go/pkg/websocket"
+    "github.com/hakaitech/xts-go/pkg/websocket"
 )
 
 // Implement event handler
@@ -285,6 +288,7 @@ The `examples/` directory contains comprehensive examples:
 
 - [`examples/basic_usage/`](examples/basic_usage/) - Basic API usage examples
 - [`examples/websocket_streaming/`](examples/websocket_streaming/) - WebSocket streaming example
+- [`examples/extending_library/`](examples/extending_library/) - Demonstrates how to extend the library for custom applications
 
 To run the examples:
 
@@ -306,12 +310,97 @@ go run examples/websocket_streaming/main.go
 The library provides comprehensive error handling:
 
 ```go
-import "xts-go/pkg/types"
+import "github.com/hakaitech/xts-go/pkg/errors"
 
 // API errors implement the error interface
-if apiErr, ok := err.(*types.APIError); ok {
-    fmt.Printf("API Error - Code: %s, Message: %s\n", 
-        apiErr.Code, apiErr.Message)
+if xtsErr, ok := err.(*errors.XTSError); ok {
+    fmt.Printf("API Error - Type: %s, Code: %s, Message: %s\n", 
+        xtsErr.Type, xtsErr.Code, xtsErr.Message)
+    
+    // Check error characteristics
+    if xtsErr.IsRetryable() {
+        // Implement retry logic
+    }
+    
+    if xtsErr.IsAuthError() {
+        // Handle authentication errors
+    }
+}
+```
+
+## Using as a Library
+
+The XTS Go wrapper is designed to be used as a library for building trading applications and tools. Here's how to extend it:
+
+### Using Interfaces
+
+```go
+package main
+
+import (
+    "context"
+    "github.com/hakaitech/xts-go/pkg/client"
+    "github.com/hakaitech/xts-go/pkg/interfaces"
+    "github.com/hakaitech/xts-go/pkg/config"
+)
+
+// Custom trading application
+type TradingApp struct {
+    xts interfaces.XTSClient
+}
+
+func NewTradingApp(xts interfaces.XTSClient) *TradingApp {
+    return &TradingApp{xts: xts}
+}
+
+func (app *TradingApp) ExecuteStrategy(ctx context.Context) error {
+    // Access individual APIs through interfaces
+    tradingAPI := app.xts.GetTradingAPI()
+    marketAPI := app.xts.GetMarketDataAPI()
+    
+    // Your custom logic here
+    // ...
+    
+    return nil
+}
+
+func main() {
+    cfg := config.NewConfig("secret", "app", "client")
+    xtsClient, _ := client.NewXTSClient(cfg)
+    
+    app := NewTradingApp(xtsClient)
+    // Use your custom app
+}
+```
+
+### Custom Trading Strategy
+
+```go
+// Define your strategy interface
+type TradingStrategy interface {
+    ShouldBuy(quote *types.TouchlineData) bool
+    ShouldSell(quote *types.TouchlineData) bool
+}
+
+// Implement your strategy
+type MyStrategy struct {
+    // strategy parameters
+}
+
+func (s *MyStrategy) ShouldBuy(quote *types.TouchlineData) bool {
+    // Your buy logic
+    return false
+}
+
+func (s *MyStrategy) ShouldSell(quote *types.TouchlineData) bool {
+    // Your sell logic
+    return false
+}
+
+// Use with XTS client
+type StrategyBot struct {
+    client   interfaces.XTSClient
+    strategy TradingStrategy
 }
 ```
 

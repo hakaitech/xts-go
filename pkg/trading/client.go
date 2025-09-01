@@ -2,12 +2,13 @@ package trading
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 
-	"xts-go/pkg/api"
-	"xts-go/pkg/config"
-	"xts-go/pkg/types"
+	"github.com/hakaitech/xts-go/pkg/api"
+	"github.com/hakaitech/xts-go/pkg/config"
+	"github.com/hakaitech/xts-go/pkg/types"
 )
 
 // Client handles trading/interactive API operations
@@ -251,9 +252,9 @@ func (c *Client) CancelOrder(ctx context.Context, appOrderID float64) error {
 }
 
 // CancelAllOrders cancels all orders for a specific instrument
-func (c *Client) CancelAllOrders(ctx context.Context, exchangeSegment string, instrumentID int64) error {
+func (c *Client) CancelAllOrders(ctx context.Context, exchangeSegment string, instrumentID int64) (interface{}, error) {
 	if c.sessionToken == "" {
-		return fmt.Errorf("not logged in")
+		return nil, fmt.Errorf("not logged in")
 	}
 
 	body := map[string]interface{}{
@@ -261,16 +262,25 @@ func (c *Client) CancelAllOrders(ctx context.Context, exchangeSegment string, in
 		"exchangeInstrumentID": instrumentID,
 	}
 
-	resp, err := c.apiClient.Post(ctx, "/interactive/orders/cancelall", body, api.AuthHeaders(c.sessionToken))
+	resp, err := c.apiClient.Post(ctx, "/interactive/orders/cancelall", body, map[string]string{
+		"Authorization": c.sessionToken,
+		"Content-Type":  "application/json",
+	})
 	if err != nil {
-		return fmt.Errorf("failed to cancel all orders: %w", err)
+		return nil, fmt.Errorf("failed to cancel all orders: %w", err)
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("cancel all orders failed with status: %s", resp.Status)
+		return nil, fmt.Errorf("cancel all orders failed with status: %s", resp.Status)
 	}
 
-	return nil
+	var result interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return result, nil
 }
 
 // GetOrders retrieves order history

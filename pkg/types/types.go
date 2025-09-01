@@ -183,3 +183,133 @@ func (e *APIError) Error() string {
 	}
 	return e.Code + ": " + e.Message
 }
+
+// Additional Response Types for API Operations
+
+// APIResponse represents a generic API response
+type APIResponse struct {
+	Type   string      `json:"type,omitempty"`
+	Result interface{} `json:"result,omitempty"`
+	Code   string      `json:"code,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
+// ProfileResponse represents user profile API response
+type ProfileResponse struct {
+	Type   string      `json:"type,omitempty"`
+	Result UserProfile `json:"result,omitempty"`
+}
+
+// BalanceResponse represents account balance API response
+type BalanceResponse struct {
+	Type   string        `json:"type,omitempty"`
+	Result AccountBalance `json:"result,omitempty"`
+}
+
+// AccountBalance represents account balance information
+type AccountBalance struct {
+	AvailableMargin    float64 `json:"availableMargin,omitempty"`
+	UsedMargin        float64 `json:"usedMargin,omitempty"`
+	TotalMargin       float64 `json:"totalMargin,omitempty"`
+	AvailableCash     float64 `json:"availableCash,omitempty"`
+	UnutilizedAmount  float64 `json:"unutilizedAmount,omitempty"`
+}
+
+// OrderBookResponse represents order book API response
+type OrderBookResponse struct {
+	Type   string         `json:"type,omitempty"`
+	Result []OrderDetails `json:"result,omitempty"`
+}
+
+// OrderDetails represents order information
+type OrderDetails struct {
+	ClientID             string  `json:"clientID,omitempty"`
+	AppOrderID           float64 `json:"appOrderID,omitempty"`
+	OrderID              string  `json:"orderID,omitempty"`
+	ExchangeInstrumentID int64   `json:"exchangeInstrumentID,omitempty"`
+	ExchangeSegment      string  `json:"exchangeSegment,omitempty"`
+	ProductType          string  `json:"productType,omitempty"`
+	OrderType            string  `json:"orderType,omitempty"`
+	OrderSide            string  `json:"orderSide,omitempty"`
+	TimeInForce          string  `json:"timeInForce,omitempty"`
+	OrderQuantity        int64   `json:"orderQuantity,omitempty"`
+	LimitPrice           float64 `json:"limitPrice,omitempty"`
+	StopPrice            float64 `json:"stopPrice,omitempty"`
+	OrderStatus          string  `json:"orderStatus,omitempty"`
+	OrderTime            string  `json:"orderTime,omitempty"`
+}
+
+// TradeBookResponse represents trade book API response
+type TradeBookResponse struct {
+	Type   string         `json:"type,omitempty"`
+	Result []TradeDetails `json:"result,omitempty"`
+}
+
+// TradeDetails represents trade information
+type TradeDetails struct {
+	ClientID             string  `json:"clientID,omitempty"`
+	AppOrderID           float64 `json:"appOrderID,omitempty"`
+	OrderID              string  `json:"orderID,omitempty"`
+	ExchangeInstrumentID int64   `json:"exchangeInstrumentID,omitempty"`
+	ExchangeSegment      string  `json:"exchangeSegment,omitempty"`
+	ProductType          string  `json:"productType,omitempty"`
+	OrderSide            string  `json:"orderSide,omitempty"`
+	OrderType            string  `json:"orderType,omitempty"`
+	TradedQuantity       int64   `json:"tradedQuantity,omitempty"`
+	TradedPrice          float64 `json:"tradedPrice,omitempty"`
+	TradeTime            string  `json:"tradeTime,omitempty"`
+	TradeID              string  `json:"tradeID,omitempty"`
+}
+
+// PositionBookResponse represents position book API response
+type PositionBookResponse struct {
+	Type   string     `json:"type,omitempty"`
+	Result []Position `json:"result,omitempty"`
+}
+
+// Position represents position information
+type Position struct {
+	ClientID              string  `json:"clientID,omitempty"`
+	ExchangeInstrumentID  int64   `json:"exchangeInstrumentID,omitempty"`
+	ExchangeSegment       string  `json:"exchangeSegment,omitempty"`
+	ProductType           string  `json:"productType,omitempty"`
+	NetQuantity           int64   `json:"netQuantity,omitempty"`
+	BuyAveragePrice       float64 `json:"buyAveragePrice,omitempty"`
+	SellAveragePrice      float64 `json:"sellAveragePrice,omitempty"`
+	UnrealizedMTM         float64 `json:"unrealizedMTM,omitempty"`
+	RealizedMTM           float64 `json:"realizedMTM,omitempty"`
+	BuyQuantity           int64   `json:"buyQuantity,omitempty"`
+	SellQuantity          int64   `json:"sellQuantity,omitempty"`
+}
+
+// HoldingResponse represents holdings API response
+type HoldingResponse struct {
+	Type   string    `json:"type,omitempty"`
+	Result []Holding `json:"result,omitempty"`
+}
+
+// Holding represents holding information
+type Holding struct {
+	ClientID             string  `json:"clientID,omitempty"`
+	ExchangeInstrumentID int64   `json:"exchangeInstrumentID,omitempty"`
+	ExchangeSegment      string  `json:"exchangeSegment,omitempty"`
+	ProductType          string  `json:"productType,omitempty"`
+	Quantity             int64   `json:"quantity,omitempty"`
+	AveragePrice         float64 `json:"averagePrice,omitempty"`
+	CurrentPrice         float64 `json:"currentPrice,omitempty"`
+	MTM                  float64 `json:"mtm,omitempty"`
+	PNL                  float64 `json:"pnl,omitempty"`
+}
+
+// ModifyOrderParams represents parameters for modifying an order
+type ModifyOrderParams struct {
+	AppOrderID                float64 `json:"appOrderID"`
+	ModifiedProductType       string  `json:"modifiedProductType,omitempty"`
+	ModifiedOrderType         string  `json:"modifiedOrderType,omitempty"`
+	ModifiedTimeInForce       string  `json:"modifiedTimeInForce,omitempty"`
+	ModifiedOrderUID          string  `json:"modifiedOrderUID,omitempty"`
+	ModifiedLimitPrice        float64 `json:"modifiedLimitPrice,omitempty"`
+	ModifiedStopPrice         float64 `json:"modifiedStopPrice,omitempty"`
+	ModifiedOrderQuantity     int64   `json:"modifiedOrderQuantity,omitempty"`
+	ModifiedDisclosedQuantity int64   `json:"modifiedDisclosedQuantity,omitempty"`
+}

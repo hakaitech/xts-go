@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"xts-go/pkg/api"
-	"xts-go/pkg/config"
-	"xts-go/pkg/types"
+	"github.com/hakaitech/xts-go/pkg/api"
+	"github.com/hakaitech/xts-go/pkg/config"
+	"github.com/hakaitech/xts-go/pkg/types"
 )
 
 // Client handles market data API operations
