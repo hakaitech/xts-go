@@ -86,13 +86,11 @@ func (c *Client) Connect(ctx context.Context, wsURL, token string) error {
 	c.wsURL = wsURL
 	c.ctx, c.cancel = context.WithCancel(ctx)
 
-	// Parse and modify the URL to include the token
 	u, err := url.Parse(wsURL)
 	if err != nil {
 		return fmt.Errorf("invalid WebSocket URL: %w", err)
 	}
 
-	// Add token to query parameters
 	q := u.Query()
 	q.Set("token", token)
 	u.RawQuery = q.Encode()
@@ -110,7 +108,6 @@ func (c *Client) Connect(ctx context.Context, wsURL, token string) error {
 	c.conn = conn
 	c.isConnected = true
 
-	// Start message handling goroutines
 	go c.readLoop()
 	go c.pingLoop()
 
@@ -214,7 +211,6 @@ func (c *Client) readLoop() {
 		c.mu.Unlock()
 		c.handler.OnDisconnect()
 
-		// Attempt reconnection if enabled
 		if c.reconnect {
 			go c.attemptReconnect()
 		}
@@ -361,7 +357,6 @@ func (c *Client) attemptReconnect() {
 
 		fmt.Printf("Attempting WebSocket reconnection (attempt %d/%d)\n", attempt, maxRetries)
 
-		// Create new context for reconnection
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		err := c.Connect(ctx, c.wsURL, "") // Token would need to be refreshed
 		cancel()

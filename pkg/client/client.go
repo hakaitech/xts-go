@@ -47,7 +47,6 @@ func NewXTSClientWithConfig(cfg *config.Config) (*XTSClient, error) {
 
 // LoginToTrading performs host lookup (if needed) and logs into the trading API
 func (c *XTSClient) LoginToTrading(ctx context.Context) error {
-	// Perform host lookup if access password is configured
 	if c.config.AccessPassword != "" {
 		if err := c.Trading.HostLookup(ctx); err != nil {
 			return fmt.Errorf("host lookup failed: %w", err)
@@ -160,9 +159,9 @@ func (c *XTSClient) PlaceMarketOrder(ctx context.Context, exchangeSegment string
 		orderSide,
 		types.TimeInForceDAY,
 		quantity,
-		0, // limit price not needed for market order
-		0, // stop price not needed for market order
-		0, // disclosed quantity
+		0,  // limit price not needed for market order
+		0,  // stop price not needed for market order
+		0,  // disclosed quantity
 		"", // order UID will be generated
 	)
 
@@ -184,8 +183,8 @@ func (c *XTSClient) PlaceLimitOrder(ctx context.Context, exchangeSegment string,
 		types.TimeInForceDAY,
 		quantity,
 		limitPrice,
-		0, // stop price not needed for limit order
-		0, // disclosed quantity
+		0,  // stop price not needed for limit order
+		0,  // disclosed quantity
 		"", // order UID will be generated
 	)
 
@@ -208,7 +207,7 @@ func (c *XTSClient) PlaceStopLossOrder(ctx context.Context, exchangeSegment stri
 		quantity,
 		0, // limit price not needed for stop market order
 		stopPrice,
-		0, // disclosed quantity
+		0,  // disclosed quantity
 		"", // order UID will be generated
 	)
 
@@ -270,8 +269,7 @@ func (c *XTSClient) SearchInstrument(ctx context.Context, searchString, exchange
 // SetEnvironment configures the client for different environments
 func (c *XTSClient) SetEnvironment(env string) {
 	c.config.SetEnvironment(env)
-	
-	// Update the clients with new configuration
+
 	c.Trading = trading.NewClient(c.config)
 	c.MarketData = marketdata.NewClient(c.config)
 }

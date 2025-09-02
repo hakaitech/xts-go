@@ -35,7 +35,7 @@ func (c *Client) HostLookup(ctx context.Context) error {
 	}
 
 	c.apiClient.SetBaseURL(c.config.HostLookupURL)
-	
+
 	body := map[string]string{
 		"accesspassword": c.config.AccessPassword,
 		"version":        c.config.Version,
@@ -46,13 +46,11 @@ func (c *Client) HostLookup(ctx context.Context) error {
 		return fmt.Errorf("host lookup failed: %w", err)
 	}
 
-	// Decode response to get the actual base URL
 	result, err := api.DecodeDirectResponse[map[string]interface{}](c.apiClient, resp)
 	if err != nil {
 		return fmt.Errorf("failed to decode host lookup response: %w", err)
 	}
 
-	// Update base URL with the response
 	if baseURL, ok := (*result)["baseURL"].(string); ok && baseURL != "" {
 		c.apiClient.SetBaseURL(baseURL)
 	}
@@ -100,7 +98,6 @@ func (c *Client) Logout(ctx context.Context) error {
 		return fmt.Errorf("logout failed with status: %s", resp.Status)
 	}
 
-	// Clear session data
 	c.sessionToken = ""
 	c.userID = ""
 	c.isInvestorClient = false
@@ -176,7 +173,6 @@ func (c *Client) NewOrder(exchangeSegment string, instrumentID int64, productTyp
 		DisclosedQuantity:    disclosedQuantity,
 	}
 
-	// Add client ID for dealer accounts
 	if !c.isInvestorClient && c.config.ClientID != "" {
 		order.ClientID = c.config.ClientID
 	}
@@ -200,7 +196,6 @@ func (c *Client) PlaceOrder(ctx context.Context, order *types.Order) (float64, e
 		return 0, fmt.Errorf("failed to decode order response: %w", err)
 	}
 
-	// Update the order with the app order ID
 	order.AppOrderID = orderResp.Result.AppOrderID
 
 	return orderResp.Result.AppOrderID, nil

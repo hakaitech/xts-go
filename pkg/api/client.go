@@ -29,7 +29,6 @@ func NewClient(cfg *config.Config) *Client {
 		Timeout: cfg.Timeout,
 	}
 
-	// Configure TLS if SSL is disabled
 	if cfg.DisableSSL {
 		httpClient.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -55,7 +54,6 @@ func (c *Client) DoRequest(ctx context.Context, method, endpoint string, body in
 
 	for attempt := 0; attempt <= c.config.RetryAttempts; attempt++ {
 		if attempt > 0 {
-			// Wait before retry
 			select {
 			case <-ctx.Done():
 				return nil, ctx.Err()
@@ -70,7 +68,6 @@ func (c *Client) DoRequest(ctx context.Context, method, endpoint string, body in
 
 		lastErr = err
 
-		// Don't retry for certain types of errors
 		if !c.shouldRetry(err) {
 			break
 		}
@@ -100,11 +97,9 @@ func (c *Client) doSingleRequest(ctx context.Context, method, endpoint string, b
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	// Set default headers
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", c.userAgent)
 
-	// Set custom headers
 	for key, value := range headers {
 		req.Header.Set(key, value)
 	}
@@ -114,7 +109,6 @@ func (c *Client) doSingleRequest(ctx context.Context, method, endpoint string, b
 		return nil, fmt.Errorf("HTTP request failed: %w", err)
 	}
 
-	// Check for HTTP errors
 	if resp.StatusCode >= 400 {
 		defer resp.Body.Close()
 		bodyBytes, _ := io.ReadAll(resp.Body)
@@ -195,11 +189,9 @@ func (c *Client) GetWithQuery(ctx context.Context, endpoint string, params map[s
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	// Set default headers
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("User-Agent", c.userAgent)
 
-	// Set custom headers
 	for key, value := range headers {
 		req.Header.Set(key, value)
 	}
@@ -209,7 +201,6 @@ func (c *Client) GetWithQuery(ctx context.Context, endpoint string, params map[s
 		return nil, fmt.Errorf("HTTP request failed: %w", err)
 	}
 
-	// Check for HTTP errors
 	if resp.StatusCode >= 400 {
 		defer resp.Body.Close()
 		bodyBytes, _ := io.ReadAll(resp.Body)
@@ -225,7 +216,6 @@ func (c *Client) GetWithQuery(ctx context.Context, endpoint string, params map[s
 
 // shouldRetry determines if an error should trigger a retry
 func (c *Client) shouldRetry(err error) bool {
-	// Don't retry for authentication errors, bad requests, etc.
 	if apiErr, ok := err.(*types.APIError); ok {
 		switch apiErr.Code {
 		case "HTTP_401", "HTTP_403", "HTTP_400":
@@ -235,7 +225,6 @@ func (c *Client) shouldRetry(err error) bool {
 		}
 	}
 
-	// Retry for network errors
 	return true
 }
 

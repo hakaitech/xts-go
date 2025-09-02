@@ -7,34 +7,26 @@ import (
 
 // Config holds the configuration for XTS client
 type Config struct {
-	// API Credentials
 	SecretKey string
 	AppKey    string
 	ClientID  string // Required for dealer accounts
 
-	// Base URLs
 	BaseURL           string
 	MarketDataBaseURL string
-	
-	// Host lookup
-	HostLookupURL     string
-	AccessPassword    string
-	Version           string
 
-	// Connection settings
+	HostLookupURL  string
+	AccessPassword string
+	Version        string
+
 	Timeout       time.Duration
 	RetryAttempts int
-	
-	// SSL settings
+
 	DisableSSL bool
-	
-	// Source
+
 	Source string
-	
-	// Broadcast mode for market data
+
 	BroadcastMode string
-	
-	// Logging
+
 	Debug bool
 }
 

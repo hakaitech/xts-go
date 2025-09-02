@@ -21,7 +21,7 @@ type Client struct {
 func NewClient(cfg *config.Config) *Client {
 	apiClient := api.NewClient(cfg)
 	apiClient.SetBaseURL(cfg.MarketDataBaseURL)
-	
+
 	return &Client{
 		apiClient: apiClient,
 		config:    cfg,
@@ -67,7 +67,6 @@ func (c *Client) Logout(ctx context.Context) error {
 		return fmt.Errorf("market data logout failed with status: %s", resp.Status)
 	}
 
-	// Clear session data
 	c.sessionToken = ""
 	c.userID = ""
 
@@ -110,12 +109,10 @@ func (c *Client) GetTouchlineData(ctx context.Context, instruments []types.Instr
 		return nil, err
 	}
 
-	// Type assertion and conversion
 	if dataSlice, ok := result.([]interface{}); ok {
 		touchlineData := make([]types.TouchlineData, len(dataSlice))
 		for i, item := range dataSlice {
 			if data, ok := item.(map[string]interface{}); ok {
-				// Manual conversion from map to TouchlineData struct
 				touchlineData[i] = mapToTouchlineData(data)
 			}
 		}
